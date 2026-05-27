@@ -6,13 +6,14 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Usuario } from './usuario.entity';
 import { MusicaPlaylist } from './musica-playlist.entity';
 
 @Entity({ name: 'playlist' })
 export class Playlist {
-  @PrimaryColumn({ name: 'playlist_id' })
+  @PrimaryGeneratedColumn({ name: 'playlist_id' })
   playlistId: number;
 
   @PrimaryColumn({ name: 'usuario_id' })
@@ -21,6 +22,7 @@ export class Playlist {
   @Column({ name: 'nome', type: 'varchar', length: 255, nullable: false })
   nome: string;
 
+  // Coluna de data de criação com valor padrão de timestamp atual
   @CreateDateColumn({
     name: 'data_criacao',
     type: 'timestamp without time zone',
