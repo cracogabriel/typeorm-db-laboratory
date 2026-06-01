@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Artista } from 'src/entities/artista.entity';
 import {
@@ -10,7 +14,7 @@ import {
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class ArtistsService {
+export class ArtistaService {
   constructor(
     @InjectRepository(Artista)
     private readonly artistRepository: Repository<Artista>,
@@ -25,15 +29,19 @@ export class ArtistsService {
     return await this.artistRepository.save(entity);
   }
 
-  async retrieve(
-    retrieveDTO: RetrieveArtistaDTO,
-  ): Promise<Artista> {
+  async retrieve(retrieveDTO: RetrieveArtistaDTO): Promise<Artista> {
+    if (!retrieveDTO.id && !retrieveDTO.nome) {
+      throw new BadRequestException(
+        'É necessário informar o id ou o nome para busca',
+      );
+    }
+
     const artista = await this.artistRepository.findOne({
       where: {
         ...(retrieveDTO.id && { id: retrieveDTO.id }),
         ...(retrieveDTO.nome && { nome: retrieveDTO.nome }),
       },
-      relations: ['musicas'],
+      relations: { musicas: true },
     });
 
     if (!artista) {
@@ -43,9 +51,7 @@ export class ArtistsService {
     return artista;
   }
 
-  async update(
-    updateDTO: UpdateArtistaDTO,
-  ): Promise<Artista> {
+  async update(updateDTO: UpdateArtistaDTO): Promise<Artista> {
     const artista = await this.artistRepository.findOne({
       where: { id: updateDTO.id },
     });
@@ -55,21 +61,27 @@ export class ArtistsService {
     }
 
     artista.nome = updateDTO.nome ?? artista.nome;
-    artista.nacionalidade =
-      updateDTO.nacionalidade ?? artista.nacionalidade;
+    artista.nacionalidade = updateDTO.nacionalidade ?? artista.nacionalidade;
 
     return await this.artistRepository.save(artista);
   }
 
-  async delete(
-    deleteDTO: DeleteArtistaDTO,
-  ): Promise<void> {
-    const result = await this.artistRepository.delete(
-      deleteDTO.id,
-    );
+  async delete(deleteDTO: DeleteArtistaDTO): Promise<void> {
+    const artista = await this.artistRepository.findOne({
+      where: { id: deleteDTO.id },
+      relations: { musicas: true },
+    });
 
-    if (result.affected === 0) {
+    if (!artista) {
       throw new NotFoundException('Artista não encontrado');
     }
+
+    if (artista.musicas && artista.musicas.length > 0) {
+      throw new BadRequestException(
+        'Não é possível excluir o artista pois ele possui músicas associadas',
+      );
+    }
+
+    await this.artistRepository.remove(artista);
   }
 }
