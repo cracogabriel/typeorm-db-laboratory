@@ -3,14 +3,17 @@ export interface CreateArtistaDTO {
   nacionalidade: string;
 }
 
-export interface RetrieveArtistaDTO {
-  // todo
+export interface UpdateArtistaDTO {
+  id: number;
+  nome?: string;
+  nacionalidade?: string;
 }
 
-export interface UpdateArtistaDTO {
-  // todo
+export interface RetrieveArtistaDTO {
+  id?: number;
+  nome?: string;
 }
 
 export interface DeleteArtistaDTO {
-  // todo
+  id: number;
 }
