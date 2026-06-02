@@ -30,9 +30,9 @@ export class ArtistaService {
   }
 
   async retrieve(retrieveDTO: RetrieveArtistaDTO): Promise<Artista> {
-    if (!retrieveDTO.id && !retrieveDTO.nome) {
+    if ((retrieveDTO.id && retrieveDTO.nome) || (!retrieveDTO.id && !retrieveDTO.nome)) {
       throw new BadRequestException(
-        'É necessário informar o id ou o nome para busca',
+        'Deve ser fornecido ou o id ou o nome do artista (apenas um deles).',
       );
     }
 

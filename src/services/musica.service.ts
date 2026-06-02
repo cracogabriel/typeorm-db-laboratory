@@ -48,9 +48,9 @@ export class MusicaService {
   }
 
   async retrieve(retrieveDTO: RetrieveMusicaDTO): Promise<Musica> {
-    if (!retrieveDTO.id && !retrieveDTO.titulo) {
+    if ((retrieveDTO.id && retrieveDTO.titulo) || (!retrieveDTO.id && !retrieveDTO.titulo)) {
       throw new BadRequestException(
-        'É necessário informar o id ou o título para busca',
+        'Deve ser fornecido ou o id ou o título da música (apenas um deles).',
       );
     }
 

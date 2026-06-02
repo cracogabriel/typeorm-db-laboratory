@@ -51,6 +51,10 @@ describe('ArtistaService', () => {
       await expect(service.retrieve({})).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if both id and nome are provided', async () => {
+      await expect(service.retrieve({ id: 1, nome: 'Queen' })).rejects.toThrow(BadRequestException);
+    });
+
     it('should return an artist if found by id', async () => {
       const artist = {
         id: 1,

@@ -47,6 +47,13 @@ describe('Controllers (e2e)', () => {
       await request(app.getHttpServer()).get('/artistas').expect(400);
     });
 
+    it('GET /artistas (retrieve failure - both params)', async () => {
+      await request(app.getHttpServer())
+        .get('/artistas')
+        .query({ id: 1, nome: 'Queen' })
+        .expect(400);
+    });
+
     it('POST /artistas (create) & PUT /artistas/:id (update) & DELETE /artistas/:id (delete)', async () => {
       // 1. Create
       const createResponse = await request(app.getHttpServer())
@@ -106,6 +113,17 @@ describe('Controllers (e2e)', () => {
 
       expect(response.body).toHaveProperty('id', 2);
       expect(response.body).toHaveProperty('titulo', 'Stairway to Heaven');
+    });
+
+    it('GET /musicas (retrieve failure - missing params)', async () => {
+      await request(app.getHttpServer()).get('/musicas').expect(400);
+    });
+
+    it('GET /musicas (retrieve failure - both params)', async () => {
+      await request(app.getHttpServer())
+        .get('/musicas')
+        .query({ id: 1, titulo: 'Bohemian Rhapsody' })
+        .expect(400);
     });
 
     it('POST /musicas (create success) & PUT /musicas/:id (update success) & DELETE /musicas/:id', async () => {
