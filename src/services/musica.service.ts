@@ -24,12 +24,6 @@ export class MusicaService {
   ) {}
 
   async create(createDTO: CreateMusicaDTO): Promise<Musica> {
-    if (createDTO.duracaoSegundos <= 0) {
-      throw new BadRequestException(
-        'A duração da música deve ser maior que zero',
-      );
-    }
-
     const artistExists = await this.artistRepository.exists({
       where: { id: createDTO.artistaId },
     });
@@ -48,18 +42,11 @@ export class MusicaService {
   }
 
   async retrieve(retrieveDTO: RetrieveMusicaDTO): Promise<Musica> {
-    if ((retrieveDTO.id && retrieveDTO.titulo) || (!retrieveDTO.id && !retrieveDTO.titulo)) {
-      throw new BadRequestException(
-        'Deve ser fornecido ou o id ou o título da música (apenas um deles).',
-      );
-    }
-
     const musica = await this.musicRepository.findOne({
       where: {
         ...(retrieveDTO.id && { id: retrieveDTO.id }),
         ...(retrieveDTO.titulo && { titulo: retrieveDTO.titulo }),
       },
-      relations: { artista: true, musicaPlaylists: true },
     });
 
     if (!musica) {
@@ -83,11 +70,6 @@ export class MusicaService {
     }
 
     if (updateDTO.duracaoSegundos !== undefined) {
-      if (updateDTO.duracaoSegundos <= 0) {
-        throw new BadRequestException(
-          'A duração da música deve ser maior que zero',
-        );
-      }
       musica.duracaoSegundos = updateDTO.duracaoSegundos;
     }
 

@@ -30,18 +30,11 @@ export class ArtistaService {
   }
 
   async retrieve(retrieveDTO: RetrieveArtistaDTO): Promise<Artista> {
-    if ((retrieveDTO.id && retrieveDTO.nome) || (!retrieveDTO.id && !retrieveDTO.nome)) {
-      throw new BadRequestException(
-        'Deve ser fornecido ou o id ou o nome do artista (apenas um deles).',
-      );
-    }
-
     const artista = await this.artistRepository.findOne({
       where: {
         ...(retrieveDTO.id && { id: retrieveDTO.id }),
         ...(retrieveDTO.nome && { nome: retrieveDTO.nome }),
       },
-      relations: { musicas: true },
     });
 
     if (!artista) {
