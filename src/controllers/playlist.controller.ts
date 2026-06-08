@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Delete,
   Body,
@@ -15,7 +16,10 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { PlaylistService } from '../services/playlist.service';
-import { CreatePlaylistDTO } from '../interfaces/playlist.interface';
+import {
+  CreatePlaylistDTO,
+  RetrievePlaylistDTO,
+} from '../interfaces/playlist.interface';
 import { Playlist } from '../entities/playlist.entity';
 import { MusicaPlaylist } from '../entities/musica-playlist.entity';
 
@@ -52,9 +56,48 @@ export class PlaylistController {
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Dados inválidos ou usuário não encontrado.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados inválidos ou usuário não encontrado.',
+  })
   async create(@Body() createDTO: CreatePlaylistDTO): Promise<Playlist> {
     return this.playlistService.create(createDTO);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Buscar uma playlist pelo ID (inclui músicas vinculadas)',
+  })
+  @ApiParam({ name: 'id', description: 'ID da playlist', example: 1 })
+  @ApiResponse({
+    status: 200,
+    description: 'Playlist encontrada com suas músicas.',
+    schema: {
+      example: {
+        playlistId: 1,
+        usuarioId: 1,
+        nome: 'Minhas Favoritas',
+        dataCriacao: '2026-06-01T12:00:00.000Z',
+        musicaPlaylists: [
+          {
+            musicaId: 5,
+            playlistId: 1,
+            usuarioId: 1,
+            ordemNaPlaylist: 1,
+            musica: {
+              id: 5,
+              titulo: 'Hey Jude',
+              duracaoSegundos: 431,
+              artistaId: 1,
+            },
+          },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Playlist não encontrada.' })
+  async retrieve(@Param('id') id: string): Promise<Playlist> {
+    return this.playlistService.retrieve({ playlistId: Number(id) });
   }
 
   @Post(':playlistId/musicas/:musicId')
@@ -81,7 +124,10 @@ export class PlaylistController {
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Playlist ou música não encontrada.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Playlist ou música não encontrada.',
+  })
   @ApiResponse({ status: 409, description: 'Música já existe nesta playlist.' })
   async addMusicToPlaylist(
     @Param('playlistId') playlistId: string,
@@ -106,8 +152,14 @@ export class PlaylistController {
     description: 'ID da música a remover',
     example: 5,
   })
-  @ApiResponse({ status: 204, description: 'Música removida da playlist com sucesso.' })
-  @ApiResponse({ status: 404, description: 'Relação playlist-música não encontrada.' })
+  @ApiResponse({
+    status: 204,
+    description: 'Música removida da playlist com sucesso.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Relação playlist-música não encontrada.',
+  })
   async removeMusicFromPlaylist(
     @Param('playlistId') playlistId: string,
     @Param('musicId') musicId: string,

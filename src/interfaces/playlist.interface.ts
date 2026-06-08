@@ -14,6 +14,14 @@ export class CreatePlaylistDTO {
   nome_playlist: string;
 }
 
+export class RetrievePlaylistDTO {
+  @ApiProperty({
+    description: 'ID da playlist',
+    example: 1,
+  })
+  playlistId: number;
+}
+
 export class AddMusicToPlaylistDTO {
   @ApiProperty({
     description: 'ID da playlist',

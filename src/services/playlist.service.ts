@@ -7,6 +7,7 @@ import {
   AddMusicToPlaylistDTO,
   CreatePlaylistDTO,
   RemoveMusicFromPlaylistDTO,
+  RetrievePlaylistDTO,
 } from 'src/interfaces/playlist.interface';
 import { Repository } from 'typeorm';
 import { Usuario } from 'src/entities/usuario.entity';
@@ -37,6 +38,17 @@ export class PlaylistService {
     });
 
     return this.playlistRepository.save(playlist);
+  }
+
+  async retrieve({ playlistId }: RetrievePlaylistDTO): Promise<Playlist> {
+    const playlist = await this.playlistRepository.findOne({
+      where: { playlistId },
+      relations: { musicaPlaylists: { musica: true } },
+    });
+
+    if (!playlist) throw new Error('Playlist não encontrada');
+
+    return playlist;
   }
 
   async addMusicToPlaylist({
