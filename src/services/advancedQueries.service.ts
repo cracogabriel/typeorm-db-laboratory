@@ -15,18 +15,24 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class AdvancedQueriesService {
 
+  constructor(
+      @InjectRepository(Playlist)
+      private readonly playlistRepository: Repository<Playlist>,
+  ) {}
+
   async _1_1_playlistsUsuario(dto_in: _1_1_IN_playlistsUsuarioDTO) {
-    return await AppDataSource
-      .getRepository(Playlist)
+    return this.playlistRepository
       .createQueryBuilder("playlist")
       .innerJoin("playlist.usuario", "usuario")
       .select([
         "playlist.nome AS nome",
         "playlist.dataCriacao AS dataCriacao"
       ])
-      .where("usuario.username = :username", { dto_in.nome })
+      .where("usuario.username = :username", {
+        username: dto_in.nome,
+      })
       .orderBy("playlist.dataCriacao", "ASC")
       .getRawMany<_1_1_OUT_playlistsUsuarioDTO>();
   }
-  
+
 }

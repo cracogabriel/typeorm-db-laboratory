@@ -18,6 +18,7 @@ import { AdvancedQueriesService } from './services/advancedQueries.service';
 import { ArtistaController } from './controllers/artista.controller';
 import { MusicaController } from './controllers/musica.controller';
 import { PlaylistController } from './controllers/playlist.controller';
+import { AdvancedQueriesController } from './controllers/advancedQueries.controller';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PlaylistController } from './controllers/playlist.controller';
     ArtistaController,
     MusicaController,
     PlaylistController,
+    AdvancedQueriesController,
   ],
   providers: [AppService, ArtistaService, MusicaService, PlaylistService, AdvancedQueriesService],
 })
