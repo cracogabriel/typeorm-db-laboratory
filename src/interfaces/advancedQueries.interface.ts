@@ -135,3 +135,32 @@ export class _2_4_OUT_comparacaoTop1DTO {
   artista_nome: string;
 }
 
+// 2.3
+
+export class _3_8_OUT_playlistsUsuarioDTO {
+  musicaNome: string;
+  musicaPlaylistOrdem: IntegerType;
+}
+
+export class _3_9_OUT_usuarioBohemianDTO {
+  usuarioNome: string;
+}
+
+export class _5_12_IN_moverMusicaDTO{
+  @ApiProperty({
+    description: 'ID da playlist original',
+    example: 1,
+  })
+  playlistIdOrigem: number;
+  @ApiProperty({
+    description: 'ID da playlist de destino',
+    example: 2,
+  })
+  playlistIdDestino: number;
+
+  @ApiProperty({
+    description: 'ID da música',
+    example: 5,
+  })
+  musicaId: number;
+}
