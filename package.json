@@ -20,7 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
-    "postinstall": "docker compose up -d && sleep 5 && yarn typeorm migration:run -d src/data-source.ts"
+    "postinstall_disabled": "docker compose up -d && sleep 5 && yarn typeorm migration:run -d src/data-source.ts",
+    "postinstall": "docker compose up -d && timeout /t 5 /nobreak > nul && yarn typeorm migration:run -d src/data-source.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
