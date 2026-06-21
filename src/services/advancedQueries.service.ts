@@ -37,6 +37,8 @@ export class AdvancedQueriesService {
     private readonly musicaPlaylistRepository: Repository<MusicaPlaylist>,
   ) {}
 
+  // 2.1.1 Playlists de um Usuário Específico
+  // Implemente uma função para listar todas as Playlists de um USUARIO específico, usando o username como filtro (ex: 'Pablo'). O retorno deve incluir o nome da Playlist e a data de criação.
   async _1_1_playlistsUsuario(dto_in: _1_1_IN_playlistsUsuarioDTO): Promise<_1_1_OUT_playlistsUsuarioDTO[]> {
     return this.playlistRepository
       .createQueryBuilder("playlist")
@@ -52,6 +54,8 @@ export class AdvancedQueriesService {
       .getRawMany<_1_1_OUT_playlistsUsuarioDTO>();
   }
 
+  // Músicas em Playlists de um Artista
+  // Encontre todas as Músicas que pertencem a qualquer Playlist criada por um USUARIO específico (ex: 'Josue'), e cujo ARTISTA seja 'Queen'. Esta consulta requer atravessar múltiplos relacionamentos e aplicar filtros em diferentes entidades.
   async _1_2_musicasPlaylistsUsuarioArtista(
     dto_in: _1_2_IN_musicasPlaylistsUsuarioArtista,
   ): Promise<_1_2_OUT_musicasPlaylistsUsuarioArtista[]> {
@@ -74,6 +78,8 @@ export class AdvancedQueriesService {
       .getRawMany<_1_2_OUT_musicasPlaylistsUsuarioArtista>();
   }
 
+  // Contagem de Músicas por Playlist
+  // Liste o nome de todas as Playlists e o número total de Músicas que cada uma contém. A listagem deve ser ordenada da Playlist mais longa para a mais curta. (Foco em agregação e manipulação da chave composta da Playlist).
   async _1_3_musicasPlaylist(): Promise<_1_3_OUT_MusicasPlaylist[]> {
     return this.playlistRepository
       .createQueryBuilder("playlist")
@@ -86,6 +92,8 @@ export class AdvancedQueriesService {
       .getRawMany<_1_3_OUT_MusicasPlaylist>();
   }
 
+  // Artistas Sem Músicas em Playlists
+  // Identifique e liste todos os Artistas que não possuem nenhuma de suas Músicas adicionadas a nenhuma Playlist no sistema. (Foco em operadores NOT IN, LEFT JOIN ou EXCEPT).
   async _1_4_artistasEsquecidos(): Promise<_1_4_OUT_artistasEsquecidos[]> {
     return this.playlistRepository.manager
       .createQueryBuilder()
