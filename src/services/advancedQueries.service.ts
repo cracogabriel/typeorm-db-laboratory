@@ -22,7 +22,15 @@ import {
   _2_4_OUT_rankPopularidadeArtistaDTO,
   _2_4_IN_comparacaoTop1DTO,
   _2_4_OUT_comparacaoTop1DTO,
+  _3_8_OUT_playlistsUsuarioDTO,
+  _3_9_OUT_usuarioBohemianDTO,
+  _5_12_IN_moverMusicaDTO,
 } from 'src/interfaces/advancedQueries.interface';
+
+import {
+  AddMusicToPlaylistDTO,
+  RemoveMusicFromPlaylistDTO
+} from 'src/interfaces/playlist.interface';
 
 @Injectable()
 export class AdvancedQueriesService {
@@ -54,7 +62,7 @@ export class AdvancedQueriesService {
       .getRawMany<_1_1_OUT_playlistsUsuarioDTO>();
   }
 
-  // Músicas em Playlists de um Artista
+  // 2.1.2 Músicas em Playlists de um Artista
   // Encontre todas as Músicas que pertencem a qualquer Playlist criada por um USUARIO específico (ex: 'Josue'), e cujo ARTISTA seja 'Queen'. Esta consulta requer atravessar múltiplos relacionamentos e aplicar filtros em diferentes entidades.
   async _1_2_musicasPlaylistsUsuarioArtista(
     dto_in: _1_2_IN_musicasPlaylistsUsuarioArtista,
@@ -78,7 +86,7 @@ export class AdvancedQueriesService {
       .getRawMany<_1_2_OUT_musicasPlaylistsUsuarioArtista>();
   }
 
-  // Contagem de Músicas por Playlist
+  // 2.1.3 Contagem de Músicas por Playlist
   // Liste o nome de todas as Playlists e o número total de Músicas que cada uma contém. A listagem deve ser ordenada da Playlist mais longa para a mais curta. (Foco em agregação e manipulação da chave composta da Playlist).
   async _1_3_musicasPlaylist(): Promise<_1_3_OUT_MusicasPlaylist[]> {
     return this.playlistRepository
@@ -92,7 +100,7 @@ export class AdvancedQueriesService {
       .getRawMany<_1_3_OUT_MusicasPlaylist>();
   }
 
-  // Artistas Sem Músicas em Playlists
+  // 2.1.4 Artistas Sem Músicas em Playlists
   // Identifique e liste todos os Artistas que não possuem nenhuma de suas Músicas adicionadas a nenhuma Playlist no sistema. (Foco em operadores NOT IN, LEFT JOIN ou EXCEPT).
   async _1_4_artistasEsquecidos(): Promise<_1_4_OUT_artistasEsquecidos[]> {
     return this.playlistRepository.manager
@@ -224,4 +232,138 @@ export class AdvancedQueriesService {
       .orderBy('musica.duracaoSegundos', 'DESC')
       .getRawMany<_2_4_OUT_comparacaoTop1DTO>();
   }
+
+  // 2.3. Chaves e Junções Complexas
+
+  // 2.3.8 Busca em Tabela de Junção com Atributos Extras
+  // Liste o título de todas as Músicas na playlist 'Rock do Pablo', incluindo a ordem_na_playlist de cada música.
+  async _3_8_playlistsUsuario(): Promise<_3_8_OUT_playlistsUsuarioDTO[]> {
+    return this.playlistRepository
+      .createQueryBuilder("playlist")
+      .innerJoin("playlist.musicaPlaylists", "mp")
+      .innerJoin("mp.musica", "musica")
+      .innerJoin("musica.artista", "artista")
+      .select([
+        "musica.titulo AS musicaNome",
+        "mp.ordemNaPlaylist AS musicaPlaylistOrdem",
+      ])
+      .andWhere("playlist.nome = :playlistNome", {
+        playlistNome: "Rock do Pablo",
+      })
+      .getRawMany<_3_8_OUT_playlistsUsuarioDTO>();
+  }
+
+  // 2.3.9 Busca por Chave Composta Invertida
+  // Encontre o username do Usuário que é o dono da Playlist que contém a MUSICA 'Bohemian Rhapsody'. O filtro deve começar pela MUSICA e navegar de volta para o USUARIO.
+  async _3_9_usuarioBohemian(): Promise<_3_9_OUT_usuarioBohemianDTO[]> {
+    return this.playlistRepository
+      .createQueryBuilder("playlist")
+      .innerJoin("playlist.usuario", "usuario")
+      .innerJoin("playlist.musicaPlaylists", "mp")
+      .innerJoin("mp.musica", "musica")
+      .innerJoin("musica.artista", "artista")
+      .select([
+        "usuario.username AS usuarioNome",
+      ])
+      .andWhere("musica.titulo = :musicaNome", {
+        musicaNome: "Bohemian Rhapsody",
+      })
+      .distinct()
+      .getRawMany<_3_9_OUT_usuarioBohemianDTO>();
+  }
+
+  // 2.5 Teste de Transações e Concorrência
+
+  // 2.5.12 Transferência Transacional de Música (Transferência Atômica)
+  //  Implemente uma função que mova uma MUSICA de uma PLAYLIST para outra PLAYLIST (ambas do mesmo USUARIO), garantindo que o processo seja Atômico (ou tudo acontece ou nada acontece).
+  async _5_12_moverMusica(dto_in: _5_12_IN_moverMusicaDTO) {
+    
+    await this.playlistRepository.manager.transaction(async (manager) => {
+      const playlistOrigem = await manager.findOne(Playlist, {
+        where: { playlistId: dto_in.playlistIdOrigem },
+      });
+      if (!playlistOrigem) throw new Error('Playlist de origem não encontrada');
+      const playlistDestino = await manager.findOne(Playlist, {
+        where: { playlistId: dto_in.playlistIdDestino },
+      });
+      if (!playlistDestino) throw new Error('Playlist de destino não encontrada');
+      if(playlistOrigem.usuarioId != playlistDestino.usuarioId) throw new Error('A playlist de destino pertence a outro usuário');
+      await this.addMusicToPlaylist(dto_in, manager);
+      await this.removeMusicFromPlaylist(dto_in, manager);
+    });
+  }
+
+  async addMusicToPlaylist({
+      playlistIdOrigem,
+      musicaId,
+      playlistIdDestino
+    }: _5_12_IN_moverMusicaDTO, manager): Promise<MusicaPlaylist> {
+      const playlist = await manager.findOne(Playlist, {
+        where: { playlistIdDestino },
+      });
+      if (!playlist) throw new Error('Playlist não encontrada');
+  
+      const music = await manager.findOne(Musica, {
+        where: { id: musicaId },
+      });
+      if (!music) throw new Error('Música não encontrada');
+  
+      // calcula a próxima ordem contando quantas músicas já existem na playlist
+      const totalMusicas = await manager.count(MusicaPlaylist, {
+        where: {
+          playlistId: playlist.playlistId,
+          usuarioId: playlist.usuarioId,
+        },
+      });
+  
+      const ordemNaPlaylist = totalMusicas + 1;
+  
+      const musicaPlaylist = manager.create(MusicaPlaylist, {
+        musicaId: musicaId,
+        playlistId: playlist.playlistId,
+        usuarioId: playlist.usuarioId, // obrigatório, faz parte da PK composta
+        ordemNaPlaylist, // próxima posição na ordem
+      });
+  
+      return manager.save(MusicaPlaylist,musicaPlaylist);
+    }
+  
+    async removeMusicFromPlaylist({
+      playlistIdOrigem,
+      musicaId,
+      playlistIdDestino
+    }: _5_12_IN_moverMusicaDTO, manager): Promise<void> {
+      const playlist = await manager.findOne(Playlist, {
+        where: { playlistIdOrigem },
+      });
+      if (!playlist) throw new Error('Playlist não encontrada');
+      const musicaPlaylist = await manager.findOne(MusicaPlaylist, {
+        where: {
+          playlistId: playlist.playlistId,
+          usuarioId: playlist.usuarioId,
+          musicaId: musicaId,
+        },
+      });
+      if (!musicaPlaylist) throw new Error('Música não encontrada na playlist');
+      const ordemRemovida = musicaPlaylist.ordemNaPlaylist;
+      await manager.delete(MusicaPlaylist, {
+        playlistId: playlist.playlistId,
+        usuarioId: playlist.usuarioId,
+        musicaId: musicaId,
+      });
+      await manager
+        .createQueryBuilder(MusicaPlaylist)
+        .update(MusicaPlaylist)
+        .set({ ordemNaPlaylist: () => 'ordem_na_playlist - 1' })
+        .where(
+          'playlist_id = :playlistId AND usuario_id = :usuarioId AND ordem_na_playlist > :ordemRemovida',
+          {
+            playlistId: playlist.playlistId,
+            usuarioId: playlist.usuarioId,
+            ordemRemovida,
+          },
+        )
+        .execute();
+    }
+    
 }

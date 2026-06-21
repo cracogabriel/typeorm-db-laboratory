@@ -27,6 +27,9 @@ import {
   _2_4_OUT_rankPopularidadeArtistaDTO,
   _2_4_IN_comparacaoTop1DTO,
   _2_4_OUT_comparacaoTop1DTO,
+  _3_8_OUT_playlistsUsuarioDTO,
+  _3_9_OUT_usuarioBohemianDTO,
+  _5_12_IN_moverMusicaDTO
 } from '../interfaces/advancedQueries.interface';
 
 @ApiTags('AdvancedQueries')
@@ -148,5 +151,44 @@ export class AdvancedQueriesController {
   })
   async _2_4_comparacaoTop1(@Body() dto_in: _2_4_IN_comparacaoTop1DTO) {
     return this.advancedQueriesService._2_4_comparacaoTop1(dto_in);
+  }
+
+  // 2.3
+
+  @Post('_3_8_playlists_usuario')
+  @ApiOperation({ summary: 'Musicas da playlist "Rock do Plablo"' })
+  @ApiResponse({
+    status: 200,
+    type: _3_8_OUT_playlistsUsuarioDTO,
+    isArray: true,
+  })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  async _3_8_playlistsUsuario(): Promise<_3_8_OUT_playlistsUsuarioDTO[]> {
+    return this.advancedQueriesService._3_8_playlistsUsuario();
+  }
+
+  @Post('_3_9_usuario_bohemian')
+  @ApiOperation({ summary: 'Usuários que escutam "Bohemian Rhapsody"' })
+  @ApiResponse({
+    status: 200,
+    type: _3_9_OUT_usuarioBohemianDTO,
+    isArray: true,
+  })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  async _3_9_usuarioBohemian(): Promise<_3_9_OUT_usuarioBohemianDTO[]> {
+    return this.advancedQueriesService._3_9_usuarioBohemian();
+  }
+
+  @Post('_5_12_mover_musica')
+  @ApiOperation({ summary: 'Listar playlists de um usuário' })
+  @ApiBody({
+    type: _5_12_IN_moverMusicaDTO,
+  })
+  @ApiResponse({
+    status: 200,
+  })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  async _5_12_moverMusica(@Body() dto_in: _5_12_IN_moverMusicaDTO) {
+    return this.advancedQueriesService._5_12_moverMusica(dto_in);
   }
 }
