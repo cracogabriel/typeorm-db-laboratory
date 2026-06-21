@@ -100,7 +100,7 @@ export class AdvancedQueriesService {
       .select("artista.nome", "nome")
       .from("artista", "artista")
       .where(qb => {
-        const sub = qb
+        const subQuery = qb
           .subQuery()
           .select("1")
           .from("musica", "musica")
@@ -109,7 +109,7 @@ export class AdvancedQueriesService {
           .where("a2.id = artista.id")
           .getQuery();
 
-        return "NOT EXISTS " + sub;
+        return `NOT EXISTS ${subQuery}`;
       })
       .getRawMany<_1_4_OUT_artistasEsquecidos>();
   }
