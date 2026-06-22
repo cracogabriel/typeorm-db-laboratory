@@ -299,7 +299,7 @@ export class AdvancedQueriesService {
       playlistIdDestino
     }: _5_12_IN_moverMusicaDTO, manager): Promise<MusicaPlaylist> {
       const playlist = await manager.findOne(Playlist, {
-        where: { playlistIdDestino },
+        where: { playlistId: playlistIdDestino },
       });
       if (!playlist) throw new Error('Playlist não encontrada');
   
@@ -334,7 +334,7 @@ export class AdvancedQueriesService {
       playlistIdDestino
     }: _5_12_IN_moverMusicaDTO, manager): Promise<void> {
       const playlist = await manager.findOne(Playlist, {
-        where: { playlistIdOrigem },
+        where: { playlistId: playlistIdOrigem },
       });
       if (!playlist) throw new Error('Playlist não encontrada');
       const musicaPlaylist = await manager.findOne(MusicaPlaylist, {
@@ -352,7 +352,7 @@ export class AdvancedQueriesService {
         musicaId: musicaId,
       });
       await manager
-        .createQueryBuilder(MusicaPlaylist)
+        .createQueryBuilder()
         .update(MusicaPlaylist)
         .set({ ordemNaPlaylist: () => 'ordem_na_playlist - 1' })
         .where(
